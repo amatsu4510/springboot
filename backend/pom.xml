@@ -51,6 +51,12 @@
       <optional>true</optional>
     </dependency>
 
+    <!-- Spring Batch: Job/Step/Reader/Processor/Writer による バッチ処理フレームワーク -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-batch</artifactId>
+    </dependency>
+
     <!-- テスト用（デフォルトで含まれる） -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
