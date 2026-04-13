@@ -27,6 +27,7 @@ PostgreSQL をデータベースとして使用します。すべてのサービ
 | frontend  | React + Vite (TypeScript) | 5173   |
 | backend   | Spring Boot 3 (Java 21)   | 8080   |
 | db        | PostgreSQL 16             | 5432   |
+| adminer   | Adminer (Web DB GUI)      | 8081   |
 
 ---
 
@@ -117,6 +118,7 @@ docker compose up --build -d
 |------------------------------|-----------------------------|
 | http://localhost:5173        | React フロントエンド         |
 | http://localhost:8080/hello  | Spring Boot API（直接アクセス）|
+| http://localhost:8081        | Adminer（DB GUI）           |
 | localhost:5432               | PostgreSQL（DB クライアント用）|
 
 ### 停止
@@ -139,6 +141,7 @@ docker compose logs -f
 docker compose logs -f backend
 docker compose logs -f frontend
 docker compose logs -f db
+docker compose logs -f adminer
 ```
 
 ---
@@ -181,6 +184,30 @@ Port:     5432
 Database: appdb
 User:     appuser
 Password: apppass
+```
+
+### DB GUI（Adminer）
+
+ブラウザから PostgreSQL のテーブルやデータを確認・操作できる軽量な Web ツールです。
+
+**アクセス:** http://localhost:8081
+
+ログイン画面で以下を入力します:
+
+| 項目     | 値         |
+|----------|------------|
+| System   | PostgreSQL |
+| Server   | `db`       |
+| Username | `appuser`  |
+| Password | `apppass`  |
+| Database | `appdb`    |
+
+> **注意:** Server には `localhost` ではなく Docker のサービス名 `db` を入力してください。
+
+Adminer だけを単独で起動・追加する場合:
+
+```bash
+docker compose up -d adminer
 ```
 
 ---

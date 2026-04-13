@@ -41,6 +41,14 @@ services:
       db:
         condition: service_healthy  # PostgreSQL の準備完了を待ってから起動する
 
+  # ─── DB GUI: Adminer ────────────────────────────────────────────────────────
+  adminer:
+    image: adminer:latest           # 軽量な Web ベース DB 管理ツール
+    ports:
+      - "8081:8080"                 # http://localhost:8081 でアクセス
+    depends_on:
+      - db                          # db が起動してから adminer を起動する
+
   # ─── Database: PostgreSQL ───────────────────────────────────────────────────
   db:
     image: postgres:16-alpine       # 公式の軽量 PostgreSQL イメージ
