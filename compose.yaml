@@ -1,0 +1,66 @@
+# Docker Compose ファイル: React + Vite + Spring Boot + PostgreSQL
+# Docker Compose v2 が必要（compose.yaml はモダンな命名規則）
+
+services:
+
+  # ─── Frontend: React + Vite ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend   # frontend/Dockerfile からビルドする
+    ports:
+      - "5173:5173"         # ホストの 5173 → コンテナの 5173
+    volumes:
+      # ソースコードをマウントして Vite の HMR（ホットリロード）が変更を検知できるようにする
+      - ./frontend:/app
+      # node_modules は名前付きボリュームで管理する
+      # ホスト側の空の node_modules がコンテナ内のインストール済み依存を上書きするのを防ぐ
+      - frontend_node_modules:/app/node_modules
+    environment:
+      # Vite プロキシが使用するバックエンドの URL（vite.config.ts 内で参照）
+      - VITE_API_URL=http://backend:8080
+    depends_on:
+      - backend             # backend が起動してから frontend を起動する
+
+  # ─── Backend: Spring Boot ───────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend    # backend/Dockerfile からビルドする
+    ports:
+      - "8080:8080"         # ホストの 8080 → コンテナの 8080
+    volumes:
+      # Spring DevTools のホットリロード用にソースをマウント
+      - ./backend/src:/app/src
+    environment:
+      # application.properties を Docker 用の DB 接続設定で上書きする
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/appdb
+      - SPRING_DATASOURCE_USERNAME=appuser
+      - SPRING_DATASOURCE_PASSWORD=apppass
+      # DevTools のリモート再起動サポートを有効化
+      - JAVA_TOOL_OPTIONS=-Dspring.devtools.restart.enabled=true
+    depends_on:
+      db:
+        condition: service_healthy  # PostgreSQL の準備完了を待ってから起動する
+
+  # ─── Database: PostgreSQL ───────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine       # 公式の軽量 PostgreSQL イメージ
+    ports:
+      - "5432:5432"                 # ローカルの DB クライアントから接続できるように公開
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppass
+    volumes:
+      # 名前付きボリュームでコンテナ再起動後もデータを保持する
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # backend が起動する前にこのチェックが成功するのを待つ
+      test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+# 名前付きボリュームの宣言
+volumes:
+  postgres_data:          # PostgreSQL のデータを永続化する
+  frontend_node_modules:  # コンテナ内の node_modules をホストから隔離する
